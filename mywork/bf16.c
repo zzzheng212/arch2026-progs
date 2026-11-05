@@ -5,9 +5,7 @@ uint16_t bf16_mul(uint16_t a, uint16_t b);
 uint16_t bf16_sqrt(uint16_t a);
 int main()
 {
-    uint32_t f32bits = 0xf33323fd;  // 0xf333
-    printf("0x%04X\n", bf16_from_f32(f32bits));
-    return 0;
+    // test
 }
 uint16_t bf16_from_f32(uint32_t f32bits)
 {
@@ -24,11 +22,11 @@ uint16_t bf16_mul(uint16_t a, uint16_t b)
     uint16_t a_expo = (a >> 7) & 0xFFu;  // first get a's information
     uint16_t a_sign = (a >> 15) & 0x1u;
     uint16_t a_frac = a & 0x7Fu;
-    uint16_t a_mant = 128u + a_frac;     // 128 * (1 + frac/128) = 128 + frac
+    uint16_t a_mant = a_frac;            // 128 * (1 + frac/128) = 128 + frac
     uint16_t b_expo = (b >> 7) & 0xFFu;  // get b's information
     uint16_t b_sign = (b >> 15) & 0x1u;
     uint16_t b_frac = b & 0x7Fu;
-    uint16_t b_mant = 128u + b_frac;
+    uint16_t b_mant = b_frac;
 
     uint16_t sign = (a ^ b) & 0x8000;  // use xor to get the a*b's sign
 
@@ -46,7 +44,7 @@ uint16_t bf16_mul(uint16_t a, uint16_t b)
             if ((a & 0x7FFFu) == 0) {                 // a is zero
                 return 0x7FC0;
             }
-            return sign | 0x7FC0;  // a is nonzero
+            return sign | 0x7F80;  // a is nonzero
         }
     }
 
@@ -55,12 +53,38 @@ uint16_t bf16_mul(uint16_t a, uint16_t b)
     if ((a & 0x7fff) == 0 || (b & 0x7fff) == 0) {
         return sign;
     }
+
+    // if a or b is denormalized num
+    int e_a = (int) a_expo - 127;
+    int e_b = (int) b_expo - 127;
+
+    if (a_expo == 0) {
+        e_a = -126;
+        while (a_mant < 128u) {
+            a_mant <<= 1;
+            e_a--;
+        }
+    } else {
+        a_mant += 128u;
+    }
+
+    if (b_expo == 0) {
+        e_b = -126;
+        while (b_mant < 128u) {
+            b_mant <<= 1;
+            e_b--;
+        }
+    } else {
+        b_mant += 128u;
+    }
+
+
     // a and b are nonzero
-    uint32_t product = a_mant * b_mant;
-    int e = a_expo + b_expo;
+    uint32_t product = (uint32_t) a_mant * b_mant;
+    int e = e_a + e_b;
     if (product > 32768u) {  // 2**15 = 32768
         e++;
-        product >> 1;
+        product >>= 1;
     }
     uint32_t mant =
         product >> 7;  // 多乘一次128(frantion換mant乘過了) 相乘又多乘一次
