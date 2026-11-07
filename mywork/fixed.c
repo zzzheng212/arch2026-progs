@@ -27,11 +27,15 @@ uint32_t op2(uint32_t a, uint32_t b)  // a - b 也就是 a + b的二補數 a + (
     return a - b;
 }
 
-uint32_t op3(uint32_t a, uint32_t b)
+uint32_t op3(uint32_t a, uint32_t b)  // floor((a+b)/2) 0111 0101
 {
-    (void) a;
-    (void) b;
-    return 0;
+    // 直接 return (a + b) >> 2 可能使 a+b 計算時溢位
+    // 若是奇數在右移一位時自動取floor
+    // 先取出各自最低bit，再各自>>1做相加，若最低bit皆為1則結果再加一
+
+    uint32_t carry = (a & 1u) & (b & 1u);
+
+    return (a >> 1) + (b >> 1) + carry;
 }
 
 int32_t q_mul(int32_t a, int32_t b)
