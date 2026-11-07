@@ -22,11 +22,9 @@ uint32_t op1(uint32_t a, uint32_t b, int *n)
     }
     return a;
 }
-uint32_t op2(uint32_t a, uint32_t b)
+uint32_t op2(uint32_t a, uint32_t b)  // a - b 也就是 a + b的二補數 a + (~b + 1)
 {
-    (void) a;
-    (void) b;
-    return 0;
+    return a - b;
 }
 
 uint32_t op3(uint32_t a, uint32_t b)
