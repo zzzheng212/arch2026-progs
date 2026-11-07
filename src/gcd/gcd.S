@@ -23,8 +23,8 @@ common: #直到a or b變成奇數
     bne t1, zero, afactor_by_two
 
 
-    srai a0, a0, 1
-    srai a1, a1, 1
+    srli a0, a0, 1
+    srli a1, a1, 1
     addi t0, t0 ,1
     j common
 
@@ -33,15 +33,14 @@ afactor_by_two:
     andi t1, a0, 1 #檢查最低bit
     bne  t1, zero, bfactor_by_two
 
-    srai a0, a0, 1
+    srli a0, a0, 1
     j    afactor_by_two    
 
 #將 b 變成奇數
 bfactor_by_two:
     andi t1, a1, 1
-    srai a1, a1, 1
-
     bne t1, zero, compare
+    srli a1, a1, 1
     j bfactor_by_two
 
 #比較 a , b 大小
@@ -52,14 +51,14 @@ compare:
     #交換 a , b
     mv t1, a0
     mv a0, a1
-    mv a1, a0
-suntract:
+    mv a1, t1
+subtract:
     sub a1, a1, a0
     bne a1, zero, bfactor_by_two
 
     #return a<<shift
 
-    sll a0, t0
+    sll a0, ,a0, t0
     ret
 
 #a or b 為 0，回傳非零值
