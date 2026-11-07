@@ -40,7 +40,8 @@ uint32_t op3(uint32_t a, uint32_t b)  // floor((a+b)/2) 0111 0101
 
 int32_t q_mul(int32_t a, int32_t b)
 {
-    (void) a;
-    (void) b;
-    return 0;
+    uint64_t result = (uint64_t) a * (uint64_t) b;
+    result += (int64_t) 1u << 19;
+    result >>= 20;
+    return (uint32_t) result;
 }
