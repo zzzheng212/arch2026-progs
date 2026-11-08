@@ -14,11 +14,9 @@ uint16_t bf16_from_f32(uint32_t f32bits)
 uint16_t bf16_mul(uint16_t a, uint16_t b)
 {
     uint16_t a_expo = (a >> 7) & 0xFFu;  // first get a's information
-    uint16_t a_sign = (a >> 15) & 0x1u;
     uint16_t a_frac = a & 0x7Fu;
     uint16_t a_mant = a_frac;
     uint16_t b_expo = (b >> 7) & 0xFFu;  // get b's information
-    uint16_t b_sign = (b >> 15) & 0x1u;
     uint16_t b_frac = b & 0x7Fu;
     uint16_t b_mant = b_frac;
 
@@ -107,7 +105,6 @@ uint16_t bf16_sqrt(uint16_t a)
     uint16_t a_expo = (a >> 7) & 0xFFu;  // first get a's information
     uint16_t a_sign = (a >> 15) & 0x1u;
     uint16_t a_frac = a & 0x7Fu;
-    uint16_t a_mant = a_frac;
     /*
      * A NaN is returned unchanged. +Inf is returned unchanged. -Inf, and any
      * negative nonzero value, give the quiet NaN.
@@ -171,7 +168,7 @@ uint16_t bf16_sqrt(uint16_t a)
     }
     result_e += 127;
 
-    if (result_e >= 255u) {  // Inf 計算過後是 Inf 的話要回傳 Inf 非 a
+    if (result_e >= 255) {  // Inf 計算過後是 Inf 的話要回傳 Inf 非 a
         return 0x7F80u;
     }
 
@@ -179,5 +176,5 @@ uint16_t bf16_sqrt(uint16_t a)
         return 0;
     }
     // 正常值
-    return (uint16_t) ((result_e << 7) | (root) & 0x7F);
+    return (uint16_t) (((uint32_t) result_e << 7) | (root & 0x7Fu));
 }
