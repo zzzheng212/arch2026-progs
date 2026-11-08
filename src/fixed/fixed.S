@@ -35,10 +35,10 @@ loop_finish:
     .type   op2_asm, @function
     .align  2
 op2_asm:
-    li      a0, 0
+    sub a0, a0, a1
     ret
-    .size   op2_asm, .-op2_asm
 
+    .size   op2_asm, .-op2_asm
     .globl  op3_asm
     .type   op3_asm, @function
     .align  2
