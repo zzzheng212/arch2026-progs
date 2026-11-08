@@ -15,11 +15,22 @@
     .type   op1_asm, @function
     .align  2
 op1_asm:
-    sw      zero, 0(a2)
-    li      a0, 0
-    ret
-    .size   op1_asm, .-op1_asm
+    li t0, 0 # n (count) = 0
+    beq a1, zero, loop_finish # b 為零不進迴圈
+loop:
+    and t1, a0, a1 #先 and
+    slli t1, t1, 1
+    xor a0, a0, a1
+    mv a1, t1
+    addi t0, t0 ,1
+    bne a1, zero, loop #b 不為零則不跳 
 
+loop_finish:
+    sw t0, 0(a2)
+    ret
+
+
+    .size   op1_asm, .-op1_asm
     .globl  op2_asm
     .type   op2_asm, @function
     .align  2
