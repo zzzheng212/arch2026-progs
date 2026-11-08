@@ -43,8 +43,16 @@ op2_asm:
     .type   op3_asm, @function
     .align  2
 op3_asm:
-    li      a0, 0
+    andi t0, a0, 1
+    andi t1, a1, 1
+    and t0, t0, t1 #t0 => carry
+    srli a0, a0, 1 #unsigned  
+    srli a1, a1, 1 #unsigned
+    add t0, t0, a0
+    add t0, t0, a1
+    mv a0, t0
     ret
+
     .size   op3_asm, .-op3_asm
 
     .globl  q_mul_asm
