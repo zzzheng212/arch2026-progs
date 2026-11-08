@@ -36,14 +36,19 @@ afactor_by_two:
     srli a0, a0, 1
     j    afactor_by_two    
 
-#將 b 變成奇數
+#檢查 b 是否為奇數
 bfactor_by_two:
     andi t1, a1, 1
-    bne t1, zero, compare
+    bne t1, zero, compare #跳的話代表 b 是奇數
+
+#將 b 變成奇數
+bhalf: #進來這裡代表 b 為非零偶數
     srli a1, a1, 1
-    j bfactor_by_two
+    andi t1, a1, 1
+    beq t1, zero, bhalf #跳的話代表 b 仍是偶數
 
 #比較 a , b 大小
+#b 是奇數
 compare:
     #看 a 是否小於 b
     bgeu a1, a0, subtract
@@ -54,11 +59,11 @@ compare:
     mv a1, t1
 subtract:
     sub a1, a1, a0
-    bne a1, zero, bfactor_by_two
+    bne a1, zero, bhalf #因為奇數減去奇數必為偶數
 
     #return a<<shift
 
-    sll a0, ,a0, t0
+    sll a0, a0, t0
     ret
 
 #a or b 為 0，回傳非零值
