@@ -103,7 +103,7 @@ is_inf: # 要記得看正負號
     or a0, a0, t0
     ret
 is_zero:# 一樣有分正負，但 t0 已處理好
-    mv a0, a0, t0
+    mv a0, t0
     ret 
 both_finite:
     beq t2, zero, a_denormal # a 為非正規化數
@@ -168,7 +168,7 @@ truncate:
     addi t2, t2, 127
     li t5, 255
     bge t2, t5, is_inf
-    beg zero, t2, underflow
+    bge zero, t2, underflow
 
     # 正常結果
     andi a0, a0, 127
@@ -205,7 +205,7 @@ bf16_sqrt_asm:
     andi t2, t2, 1 # 取得 sign
 
     li t3, 0xFF
-    bne t0, t3, check_zero # 沒跳代表 expo 全 1
+    bne t0, t3, sqrt_check_zero # 沒跳代表 expo 全 1
 
     #expo == 0xFF 看 frac 是啥
 
@@ -215,7 +215,7 @@ bf16_sqrt_asm:
     beq t2, zero, return_same
     j nan_return
 
-check_zero: # expo 非全 1
+sqrt_check_zero: # expo 非全 1
     li t3, 0x7FFF
     and t3, t3, a0
     beq t3, zero,  
