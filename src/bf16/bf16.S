@@ -218,16 +218,96 @@ bf16_sqrt_asm:
 sqrt_check_zero: # expo 非全 1
     li t3, 0x7FFF
     and t3, t3, a0
-    beq t3, zero,  
-return_same:
+    beq t3, zero, sqrt_iszero 
 
+    # 排除 -0 後，負數都回傳 NaN
+    bne t2, zero, sqrt_nan
+    # 正的非正規化數都回傳 +0
+    beq t0, zero, sqrt_iszero
+
+    j sqrt_normal #到這邊皆為正常數
 nan_return:
+    li a0, 0x7FC0
+    ret
+sqrt_iszero:
+    li a0, 0
+    ret
+return_same:
+    ret
 
+sqrt_normal:
+    addi t1, t1, 128 # mantissa = 128 + fraction
+    addi t0, t0, -127 
 
+    andi t2, t0, 1
+    beq t2, zero, is_even
 
+    slli t1, t1, 1 # mantissa 乘 2 
+    addi t0, t0, -1 # expo - 1
 
+is_even:
+    srai t0, t0, 1 # expo / 2
 
+    # 開始做 binary search
+    li t2, 90   #low
+    li t3, 256  #high
+    li t4, 0    #root
 
+bi_search:
+    blt t3, t2, search_finish # high <= low 代表結束
+    sub t5, t3, t2 # t5 為 mid => (high - low)
+    srli t5, t5, 1 #(high - low) / 2
+    add t5, t5, t2 # 再加 low
 
+    # 計算 mid * mid
+    mv a1, t5 # 被加數
+    mv a1, t5 # 乘數
+    li t6, 0 # square = 0
+
+square_loop:
+    andi a3, a2, 1
+    beq a3, zero, square_shift
+
+    add t6, t6, a1
+square_shift:
+    slli a1, a1, 1
+    srli a2, a2, 1
+    bne a2, zero. square_loop
+
+    srli t6, t6, 7 # square/128 做截斷
+
+    # square / 126 > mantissa
+    bltu t1, t6, mant_large
+
+    mv t4, t5 #root = mid
+    addi t2, t5, 1 # low = mid + 1
+    j bi_search
+
+mant_large:
+    addi t3, t5, -1 # high = mid - 1
+    j bi_search
+
+search_finish:
+    li t2, 256
+    bltu t4, t2, sqrt_turnback
+
+    srli t4, t4, 1
+    addi t0, t0, 1
+
+sqrt_turnback:
+    addi t0, t0, 127 # 加回 bias
+
+    li t2, 255
+    bge t0, t2, sqrt_inf # Inf
+    bge zero, t0, sqrt_iszero #太小回傳 0
+ 
+    slli t0, t0, 7
+    andi t4, t4, 127
+    or a0, t0, t4
+    ret
+
+sqrt_inf:
+    li a0, 0x7F80
+    ret
     
     .size   bf16_sqrt_asm, .-bf16_sqrt_asm
