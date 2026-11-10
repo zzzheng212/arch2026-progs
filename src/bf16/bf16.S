@@ -272,7 +272,7 @@ square_loop:
 square_shift:
     slli a1, a1, 1
     srli a2, a2, 1
-    bne a2, zero. square_loop
+    bne a2, zero, square_loop
 
     srli t6, t6, 7 # square/128 做截斷
 
