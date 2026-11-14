@@ -81,9 +81,8 @@ q_mul_asm:
     beq  t5, zero, .Lqm_shift
 
     # product += x
-    add  t5, t1, t3
-    sltu t6, t5, t1
-    mv   t1, t5
+    add  t1, t1, t3
+    sltu t6, t1, t3
     add  t2, t2, t4
     add  t2, t2, t6
 
