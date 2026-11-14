@@ -7,8 +7,8 @@ uint16_t bf16_from_f32(uint32_t f32bits)
     if (exponent == 0xFFu) {
         return (uint16_t) (f32bits >> 16);
     }
-    uint32_t lsb = (f32bits >> 16) & 1u;  // get the last bit
-    uint32_t round = f32bits + 0x7FFFu + lsb;
+    uint32_t lsb = (f32bits >> 16) & 1u;       // get the last bit
+    uint32_t round = f32bits + 0x7FFFu + lsb;  // 做四捨五入
     return (uint16_t) (round >> 16);
 }
 uint16_t bf16_mul(uint16_t a, uint16_t b)
@@ -92,7 +92,7 @@ uint16_t bf16_mul(uint16_t a, uint16_t b)
         if (exp < -6) {  // exp小於-6六直接當零，因左移7bits仍為0
             return sign;
         }
-        uint32_t frac = mant >> (1 - exp);
+        uint32_t frac = (mant & 0x7Fu) >> (1 - exp);
         return (uint16_t) (sign | frac);
     }
     // 3. 皆正常

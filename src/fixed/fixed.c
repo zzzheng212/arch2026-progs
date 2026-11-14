@@ -30,7 +30,6 @@ int32_t q_mul(int32_t a, int32_t b)
     uint32_t ua = (uint32_t) a;
     uint32_t ub = (uint32_t) b;
 
-    // 無號方式取得絕對值，包含 INT32_MIN
     if (a < 0) {
         ua = 0u - ua;
     }
@@ -38,27 +37,44 @@ int32_t q_mul(int32_t a, int32_t b)
         ub = 0u - ub;
     }
 
-    uint64_t product = 0;
-    uint64_t x = ua;
+    uint32_t lo = 0;
+    uint32_t hi = 0;
+    uint32_t xlo = ua;
+    uint32_t xhi = 0;
 
     while (ub != 0) {
         if (ub & 1u) {
-            product += x;
+            uint32_t old = lo;
+            lo += xlo;
+            hi += xhi;
+            hi += (lo < old);
         }
 
-        x <<= 1;
+        xhi = (xhi << 1) | (xlo >> 31);
+        xlo <<= 1;
         ub >>= 1;
     }
 
-    // 轉成有號乘積的二補數位元表示
+    // 對完整乘積取二補數
     if ((a < 0) != (b < 0)) {
-        product = UINT64_C(0) - product;
+        lo = 0u - lo;
+
+        // Unsigned negation wraps; lo is not necessarily zero.
+        // cppcheck-suppress knownConditionTrueFalse
+        hi = ~hi + (lo == 0);
     }
 
-    product += UINT64_C(1) << 19;
-    uint32_t bits = (uint32_t) (product >> 20);
+    // 加上捨入常數，並傳遞進位
+    uint32_t old = lo;
+    lo += 1u << 19;
 
-    // 將低32位轉成對應的 int32_t，避免超範圍轉型
+    // Unsigned addition can wrap, producing a carry.
+    // cppcheck-suppress knownConditionTrueFalse
+    hi += (lo < old);
+
+    // 取原乘積的 bits 51～20
+    uint32_t bits = (lo >> 20) | (hi << 12);
+
     if (bits <= INT32_MAX) {
         return (int32_t) bits;
     }

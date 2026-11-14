@@ -152,7 +152,7 @@ mul_loop:
 
 mul_shift:
     slli t1, t1, 1
-    slli t4, t4, 1
+    srli t4, t4, 1
     bne t4, zero, mul_loop
 
 # 正規化 product ， 再截斷
@@ -172,8 +172,8 @@ truncate:
 
     # 正常結果
     andi a0, a0, 127
-    slli t1, t1, 7
-    or a0, a0, t2
+    slli t2, t2, 7
+    or   a0, a0, t2
     or a0, a0, t0
     ret
 
@@ -182,12 +182,13 @@ underflow:
     blt t2, t5, is_zero
 
     # denormal number
-    li t5, 1
-    sub t5, t5, t2
-    srl a0, a0, t5
-    or a0, a0, t0
+    li   t5, 1
+    sub  t5, t5, t2
+    andi a0, a0, 127
+    srl  a0, a0, t5
+    or   a0, a0, t0
     ret
-
+    
     .size   bf16_mul_asm, .-bf16_mul_asm
 
     .globl  bf16_sqrt_asm
@@ -213,7 +214,7 @@ bf16_sqrt_asm:
 
     # +Inf 原樣回傳；負的回傳 NaN
     beq t2, zero, return_same
-    j nan_return
+    j sqrt_nan
 
 sqrt_check_zero: # expo 非全 1
     li t3, 0x7FFF
@@ -226,7 +227,7 @@ sqrt_check_zero: # expo 非全 1
     beq t0, zero, sqrt_iszero
 
     j sqrt_normal #到這邊皆為正常數
-nan_return:
+sqrt_nan:
     li a0, 0x7FC0
     ret
 sqrt_iszero:
@@ -261,7 +262,7 @@ bi_search:
 
     # 計算 mid * mid
     mv a1, t5 # 被加數
-    mv a1, t5 # 乘數
+    mv a2, t5 # 乘數
     li t6, 0 # square = 0
 
 square_loop:
